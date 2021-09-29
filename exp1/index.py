@@ -1,23 +1,44 @@
 from collections import defaultdict
 from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
+from nltk.corpus import wordnet
+from nltk.tokenize import RegexpTokenizer
+from nltk.stem import WordNetLemmatizer
+from nltk import pos_tag
+
+wnl = WordNetLemmatizer()
+tokenizer = RegexpTokenizer(r'\w+')
+
+
+def get_wordnet_pos(tag):
+    if tag.startswith('J'):
+        return wordnet.ADJ
+    elif tag.startswith('V'):
+        return wordnet.VERB
+    elif tag.startswith('N'):
+        return wordnet.NOUN
+    elif tag.startswith('R'):
+        return wordnet.ADV
+    else:
+        return None
 
 
 def tweet_tokenize(line, uselessTerm):
     line = line.lower()
-    a = line.index("username")
-    b = line.index("clusterno")
-    c = line.rindex("tweetid") - 1
-    d = line.rindex("errorcode")
-    e = line.index("text")
-    f = line.index("timestr") - 3
+    a = line.index('username')
+    b = line.index('clusterno')
+    c = line.rindex('tweetid') - 1
+    d = line.rindex('errorcode')
+    e = line.index('text')
+    f = line.index('timestr') - 3
     line = line[c:d] + line[a:b] + line[e:f]  # tweet_id + username + text
 
-    terms = word_tokenize(line)
-    print('terms:', terms)
+    terms = tokenizer.tokenize(line)
+    terms = [word for word in terms if word not in stopwords.words('english')]
+    term_tag = pos_tag(terms)
     result = []
-    for word in terms:
-        expected_str = ''
+    for tag in term_tag:
+        wordnet_pos = get_wordnet_pos(tag[1]) or wordnet.NOUN
+        expected_str = wnl.lemmatize(tag[0], pos=wordnet_pos)
         if expected_str not in uselessTerm:
             result.append(expected_str)
     return result
@@ -25,17 +46,20 @@ def tweet_tokenize(line, uselessTerm):
 
 def query_tokenize(query):
     query = query.lower()
-    terms = word_tokenize(query)
+    terms = tokenizer.tokenize(query)
+    terms = [word for word in terms if word not in stopwords.words('english')]
+    term_tag = pos_tag(terms)
     result = []
-    for word in terms:
-        expected_str = ''
+    for tag in term_tag:
+        wordnet_pos = get_wordnet_pos(tag[1]) or wordnet.NOUN
+        expected_str = wnl.lemmatize(tag[0], pos=wordnet_pos)
         result.append(expected_str)
     return result
 
 
 def get_postings(path):
     postings = defaultdict(list)
-    uselessTerm = ["username", "tweetid", "text"]
+    uselessTerm = ['username', 'tweetid', 'text']
     file = open(path)
     lines = file.readlines()
     for line in lines:
@@ -97,6 +121,19 @@ def option_not(postings, term1, term2):
     return result
 
 
+def rankSearch(postings, terms):  # 倒排索引
+    result = defaultdict(int)
+    for item in terms:
+        if item in postings:
+            for tweetid in postings[item]:
+                if tweetid in result:
+                    result[tweetid] += 1
+                else:
+                    result[tweetid] = 1
+    result = sorted(result.items(), key=lambda asd: asd[1], reverse=True)
+    return result
+
+
 def search(postings, query):
     terms = query_tokenize(query)
     if not terms:
@@ -113,6 +150,10 @@ def search(postings, query):
             print(answer)
         else:
             print('syntax error')
-            exit(0)
+            # exit(0)
     else:
-        pass
+        length = len(terms)
+        answer = rankSearch(postings, terms)
+        print('[Rank_Score: Tweetid]')
+        for (tweetid, score) in answer:
+            print(str(score / length) + ': ' + tweetid)
