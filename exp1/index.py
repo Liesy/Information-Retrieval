@@ -33,7 +33,6 @@ def tweet_tokenize(line, uselessTerm):
     line = line[c:d] + line[a:b] + line[e:f]  # tweet_id + username + text
 
     terms = tokenizer.tokenize(line)
-    terms = [word for word in terms if word not in stopwords.words('english')]
     term_tag = pos_tag(terms)
     result = []
     for tag in term_tag:
@@ -47,7 +46,6 @@ def tweet_tokenize(line, uselessTerm):
 def query_tokenize(query):
     query = query.lower()
     terms = tokenizer.tokenize(query)
-    terms = [word for word in terms if word not in stopwords.words('english')]
     term_tag = pos_tag(terms)
     result = []
     for tag in term_tag:
@@ -85,6 +83,8 @@ def option_and(postings, term1, term2):
         while x < i and y < j:
             if postings[term1][x] == postings[term2][y]:
                 result.append(postings[term1][x])
+                x += 1
+                y += 1
             elif postings[term1][x] < postings[term2][y]:
                 x += 1
             else:
