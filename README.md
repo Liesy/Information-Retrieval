@@ -24,3 +24,18 @@
     - 支持and, or ,not(查询优化可以选做)
 
 4. 对于tweets与queries使用相同的预处理
+
+### Expriment 2 (2021.10.13 -- 2021.11.9)
+
+1. 在Expriment 1 的基础上实现最基本的Ranked retrieval model
+    - Input: a query (like Ron and Weasley)
+    - Output: return the top K (eg., K=100) relevant tweets.
+    - 使用SMART notation: lnc.ltn
+    - Document: logarithmic tf (l as first character), no idf and cosine normalization
+    - Query: logarithmic tf (l in leftmost column), idf (t in second column), no normalization
+
+2. 改进inverted index
+    - 在Dictionary中存储每个term的DF
+    - 在posting list中存储term在每个doc中的TF with pairs (docID, tf)
+
+3. 选做：支持所有的SMART Notations
