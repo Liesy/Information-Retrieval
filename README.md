@@ -39,3 +39,11 @@
     - 在posting list中存储term在每个doc中的TF with pairs (docID, tf)
 
 3. 选做：支持所有的SMART Notations
+
+### Expriment 3 (2021.11.9 -- 2021.12.8)
+
+1. 实现以下指标评价，并对Experiment2的检索结果进行评价
+    - Mean Average Precision (MAP)
+    - Mean Reciprocal Rank (MRR)
+    - Normalized Discounted Cumulative Gain (NDCG)
+    - [dataset](https://trec.nist.gov/data/microblog/2014/qrels2014.txt)
