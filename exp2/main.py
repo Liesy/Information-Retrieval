@@ -7,7 +7,7 @@ def main():
     parser.add_argument('--path', type=str, default='../dataset/tweets.txt')
     args = parser.parse_args()
 
-    postings, doc_nums = get_postings(args.path)
+    postings = get_postings(args.path)
 
     while True:
         q = input('input query >> ')
