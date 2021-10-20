@@ -59,29 +59,29 @@ def query_tokenize(query):
 
 
 def cal_similarity(postings, query):
-    tf_query = {}  # 词数
+    tf_idf_query = {}
     score_tweetid = {}
 
     for term in query:
-        if term in tf_query.keys():
-            tf_query[term] += 1.0
+        if term in tf_idf_query.keys():
+            tf_idf_query[term] += 1.0
         else:
-            tf_query[term] = 1.0
+            tf_idf_query[term] = 1.0
 
-    for term in tf_query.keys():
+    for term in tf_idf_query.keys():
         if term in postings.keys():
             doc_fre = len(postings[term])
         else:
             doc_fre = globals()['doc_nums']
-        tf_query[term] = (log(tf_query[term]) + 1.0) * log(globals()['doc_nums'] / doc_fre)
+        tf_idf_query[term] = (log(tf_idf_query[term]) + 1.0) * log(globals()['doc_nums'] / doc_fre)
 
     for term in query:
         if term in postings.keys():
             for tid in postings[term].keys():
                 if tid in score_tweetid.keys():
-                    score_tweetid[tid] += postings[term][tid] * tf_query[term]
+                    score_tweetid[tid] += postings[term][tid] * tf_idf_query[term]
                 else:
-                    score_tweetid[tid] = postings[term][tid] * tf_query[term]
+                    score_tweetid[tid] = postings[term][tid] * tf_idf_query[term]
 
     similarity = sorted(score_tweetid.items(), key=lambda x: x[1], reverse=True)
     return similarity
@@ -98,26 +98,27 @@ def get_postings(path):
         line = tweet_tokenize(line, uselessTerm)
         tweet_id = line[0]
         line.pop(0)
-        tf_per_doc = {}
+        tf_log_nor = {}
         for term in line:  # 无需去重
-            if term in tf_per_doc.keys():
-                tf_per_doc[term] += 1.0
+            if term in tf_log_nor.keys():
+                tf_log_nor[term] += 1.0
             else:
-                tf_per_doc[term] = 1.0
-        for term in line:
-            tf_per_doc[term] = log(tf_per_doc[term]) + 1.0
+                tf_log_nor[term] = 1.0
+        
+        for term in tf_log_nor.keys():
+            tf_log_nor[term] = log(tf_log_nor[term]) + 1.0
 
         # 归一化
         nor = 0.0
-        for term in tf_per_doc.keys():
-            nor += tf_per_doc[term]
+        for term in tf_log_nor.keys():
+            nor += tf_log_nor[term]
         nor = 1.0 / sqrt(nor)
-        for term in tf_per_doc.keys():
-            tf_per_doc[term] *= nor
+        for term in tf_log_nor.keys():
+            tf_log_nor[term] *= nor
 
         unique_term = set(line)
         for term in unique_term:
-            postings[term][tweet_id] = tf_per_doc[term]
+            postings[term][tweet_id] = tf_log_nor[term]
     return postings
 
 
@@ -139,7 +140,7 @@ def search(postings, query):
         return
 
     print(str(len(relevant_tweetids)) + 'relevant tweet(s) totally...')
-    print('---[top 50] score: tweet id---')
+    print('-----[top 50] score: tweet id-----')
 
     scores = cal_similarity(postings, terms)
     i = 1
