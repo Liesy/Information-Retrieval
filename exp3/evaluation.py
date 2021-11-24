@@ -95,15 +95,15 @@ def NDCG_eval(relevant_gain_dict, retrival_dict, k=100):
             print('query[', query, '] has no docs retrived.')
             return []
 
-        truth_gain = sorted(set(relevant_gain_dict[query].values()), reverse=True)
+        truth_gain = sorted(list(relevant_gain_dict[query].values()), reverse=True)
         i = 1
         dcg, idcg = 0.0, 0.0
-        for doc in retrival_list:
+        for doc in retrival_list[1:len(truth_gain)]: # 从第一个开始
             i += 1
             rel = relevant_gain_dict[query].get(doc, 0)
             dcg += rel / log(i, 2)
             idcg += truth_gain[i - 2] / log(i, 2)
-        
+
         rel_1 = relevant_gain_dict[query].get(retrival_list[0], 0)
         dcg += rel_1
         ndcg = dcg / idcg
